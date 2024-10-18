@@ -77,7 +77,7 @@ python-dotenv==1.0.1
 pytweening==1.2.0
 pytz==2024.2
 pywhatkit==5.4
-pywin32==307
+
 pyzmq==26.2.0
 referencing==0.35.1
 requests==2.32.3
