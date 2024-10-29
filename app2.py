@@ -744,69 +744,6 @@ with col2:
         # Exibe a tabela usando o método padrão do Streamlit, ocultando a coluna de índice
         st.dataframe(df_semana_rota, use_container_width=True, hide_index=True)
 
-st.markdown('<hr style="border:none; height:1px; background-color:#e0e0e0; margin:5px 0;">', unsafe_allow_html=True)
-
-# Adicionando um checkbox para controlar a visibilidade da tabela e filtros
-show_table_and_filters = st.checkbox("Mostrar tabela e filtros detalhados", value=False)
-
-# Movendo a tabela para uma nova linha
-if show_table_and_filters:
-    col_tabela = st.columns(1)[0]
-
-    with col_tabela:
-        # Criando a tabela com as colunas especificadas
-        colunas_tabela = ['Data de emissão', 'Situação', 'Valor do(s) CTe(s) vinculado(s)', 'Peso Bruto', 'Placa(s)', 'Rota']
-        df_tabela = Tabela_MDFE_original[colunas_tabela].copy()
-
-        # Convertendo a coluna 'Data de emissão' para datetime
-        df_tabela['Data de emissão'] = pd.to_datetime(df_tabela['Data de emissão'])
-
-        # Obtendo a data mínima e máxima do DataFrame
-        data_min = df_tabela['Data de emissão'].min().date()
-        data_max = df_tabela['Data de emissão'].max().date()
-
-        # Criando um seletor de intervalo de datas usando st.slider
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            intervalo_datas = st.slider(
-                "Selecione o intervalo de datas",
-                min_value=data_min,
-                max_value=data_max,
-                value=(data_min, data_max),
-                format="DD/MM/YYYY"
-            )
-            data_inicio, data_fim = intervalo_datas
-        with col2:
-            situacoes = st.multiselect("Situação", options=df_tabela['Situação'].unique(), default=['Encerrada', 'Autorizada'])
-        with col3:
-            placas = st.multiselect("Placa(s)", options=['Todas'] + list(df_tabela['Placa(s)'].unique()), default=['Todas'])
-
-        # Filtrando o DataFrame com base nas datas selecionadas, situações e placas
-        df_filtrado = df_tabela[
-            (df_tabela['Data de emissão'].dt.date >= data_inicio) & 
-            (df_tabela['Data de emissão'].dt.date <= data_fim) &
-            (df_tabela['Situação'].isin(situacoes))
-        ]
-
-        # Aplicando o filtro de placas
-        if 'Todas' not in placas:
-            df_filtrado = df_filtrado[df_filtrado['Placa(s)'].isin(placas)]
-
-        # Calculando os totais do DataFrame filtrado
-        total_valor_cte = df_filtrado['Valor do(s) CTe(s) vinculado(s)'].sum()
-        total_peso_bruto = df_filtrado['Peso Bruto'].sum()
-
-        # Formatando os valores monetários e de peso
-        df_filtrado['Valor do(s) CTe(s) vinculado(s)'] = df_filtrado['Valor do(s) CTe(s) vinculado(s)'].apply(formatar_moeda_br)
-        df_filtrado['Peso Bruto'] = df_filtrado['Peso Bruto'].apply(lambda x: f"{x:,.2f} kg")
-
-        # Criando o cabeçalho com os totais
-        st.markdown(f"**Total Valor do(s) CTe(s) vinculado(s): {formatar_moeda_br(total_valor_cte)}**")
-        st.markdown(f"**Total Peso Bruto: {total_peso_bruto:,.2f} kg**")
-
-        # Exibindo a tabela com os registros filtrados
-        st.dataframe(df_filtrado, use_container_width=True)
-
 # Modificando as colunas para que os gráficos ocupem 50% do espaço cada
 col_grafico_placa, col_grafico_rota = st.columns(2)
 
@@ -920,6 +857,67 @@ with col_grafico_rota:
         title_font=dict(family="Arial, sans-serif", size=14)  # Fonte do título
     )
     st.plotly_chart(fig_faturamento_rota, use_container_width=True)
+
+# Adicionando um checkbox para controlar a visibilidade da tabela e filtros
+show_table_and_filters = st.checkbox("Mostrar tabela e filtros detalhados", value=False)
+
+# Movendo a tabela para uma nova linha
+if show_table_and_filters:
+    col_tabela = st.columns(1)[0]
+
+    with col_tabela:
+        # Criando a tabela com as colunas especificadas
+        colunas_tabela = ['Data de emissão', 'Situação', 'Valor do(s) CTe(s) vinculado(s)', 'Peso Bruto', 'Placa(s)', 'Rota']
+        df_tabela = Tabela_MDFE_original[colunas_tabela].copy()
+
+        # Convertendo a coluna 'Data de emissão' para datetime
+        df_tabela['Data de emissão'] = pd.to_datetime(df_tabela['Data de emissão'])
+
+        # Obtendo a data mínima e máxima do DataFrame
+        data_min = df_tabela['Data de emissão'].min().date()
+        data_max = df_tabela['Data de emissão'].max().date()
+
+        # Criando um seletor de intervalo de datas usando st.slider
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            intervalo_datas = st.slider(
+                "Selecione o intervalo de datas",
+                min_value=data_min,
+                max_value=data_max,
+                value=(data_min, data_max),
+                format="DD/MM/YYYY"
+            )
+            data_inicio, data_fim = intervalo_datas
+        with col2:
+            situacoes = st.multiselect("Situação", options=df_tabela['Situação'].unique(), default=['Encerrada', 'Autorizada'])
+        with col3:
+            placas = st.multiselect("Placa(s)", options=['Todas'] + list(df_tabela['Placa(s)'].unique()), default=['Todas'])
+
+        # Filtrando o DataFrame com base nas datas selecionadas, situações e placas
+        df_filtrado = df_tabela[
+            (df_tabela['Data de emissão'].dt.date >= data_inicio) & 
+            (df_tabela['Data de emissão'].dt.date <= data_fim) &
+            (df_tabela['Situação'].isin(situacoes))
+        ]
+
+        # Aplicando o filtro de placas
+        if 'Todas' not in placas:
+            df_filtrado = df_filtrado[df_filtrado['Placa(s)'].isin(placas)]
+
+        # Calculando os totais do DataFrame filtrado
+        total_valor_cte = df_filtrado['Valor do(s) CTe(s) vinculado(s)'].sum()
+        total_peso_bruto = df_filtrado['Peso Bruto'].sum()
+
+        # Formatando os valores monetários e de peso
+        df_filtrado['Valor do(s) CTe(s) vinculado(s)'] = df_filtrado['Valor do(s) CTe(s) vinculado(s)'].apply(formatar_moeda_br)
+        df_filtrado['Peso Bruto'] = df_filtrado['Peso Bruto'].apply(lambda x: f"{x:,.2f} kg")
+
+        # Criando o cabeçalho com os totais
+        st.markdown(f"**Total Valor do(s) CTe(s) vinculado(s): {formatar_moeda_br(total_valor_cte)}**")
+        st.markdown(f"**Total Peso Bruto: {total_peso_bruto:,.2f} kg**")
+
+        # Exibindo a tabela com os registros filtrados
+        st.dataframe(df_filtrado, use_container_width=True)
 
 print(f"Período atual: {mes_atual} até {data_atual}")
 print(f"Período anterior: {inicio_mes_anterior} até {fim_mes_anterior}")
